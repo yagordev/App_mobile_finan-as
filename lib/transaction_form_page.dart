@@ -89,10 +89,29 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     Navigator.of(context).pop();
   }
 
+  /// Retorna o nome amigável do método baseado no tipo de transação
+  String _getPaymentMethodLabel(PaymentMethod method, TransactionType type) {
+    if (type == TransactionType.income) {
+      switch (method) {
+        case PaymentMethod.cash: return 'Dinheiro em Mãos';
+        case PaymentMethod.pix: return 'Pix';
+        case PaymentMethod.bankSlip: return 'Transferência / Depósito';
+        case PaymentMethod.creditCard: return 'Cartão de Crédito';
+        case PaymentMethod.debitCard: return 'Cartão de Débito';
+        default: return 'Outro';
+      }
+    }
+    return TransactionModel(
+      id: '', value: 0, date: DateTime.now(), billingDate: DateTime.now(), 
+      categoryId: '', type: type, paymentMethod: method
+    ).paymentMethodName;
+  }
+
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceProvider>();
     final filteredCategories = finance.getCategoriesByType(_type);
+    final isIncome = _type == TransactionType.income;
 
     return Scaffold(
       appBar: AppBar(
@@ -119,6 +138,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Seletor de Tipo
                     Center(
                       child: Container(
                         decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12)),
@@ -128,7 +148,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                             Expanded(
                               child: _TypeButton(
                                 label: 'Despesa',
-                                isSelected: _type == TransactionType.expense,
+                                isSelected: !isIncome,
                                 color: AppColors.expense,
                                 onTap: () {
                                   setState(() {
@@ -141,12 +161,16 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                             Expanded(
                               child: _TypeButton(
                                 label: 'Receita',
-                                isSelected: _type == TransactionType.income,
+                                isSelected: isIncome,
                                 color: AppColors.income,
                                 onTap: () {
                                   setState(() {
                                     _type = TransactionType.income;
                                     _selectedCategory = null;
+                                    // Se estava em cartão, muda para algo comum em receita
+                                    if (_paymentMethod == PaymentMethod.creditCard || _paymentMethod == PaymentMethod.debitCard) {
+                                      _paymentMethod = PaymentMethod.pix;
+                                    }
                                   });
                                 },
                               ),
@@ -157,6 +181,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     ),
                     const SizedBox(height: 32),
 
+                    // Valor
                     Center(
                       child: Column(
                         children: [
@@ -194,6 +219,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     const Divider(height: 1),
                     const SizedBox(height: 24),
 
+                    // Categoria
                     _buildLabel('Categoria'),
                     DropdownButtonFormField<CategoryModel>(
                       value: _selectedCategory,
@@ -206,17 +232,21 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    _buildLabel('Forma de Pagamento'),
+                    // Método Dinâmico
+                    _buildLabel(isIncome ? 'Receber via' : 'Forma de Pagamento'),
                     DropdownButtonFormField<PaymentMethod>(
                       value: _paymentMethod,
                       decoration: _inputDecoration(Icons.payments_outlined),
-                      items: PaymentMethod.values.map((method) {
+                      items: PaymentMethod.values.where((m) {
+                        // Filtra métodos que não fazem sentido para receita comum
+                        if (isIncome) {
+                          return m != PaymentMethod.creditCard && m != PaymentMethod.debitCard;
+                        }
+                        return true;
+                      }).map((method) {
                         return DropdownMenuItem(
                           value: method,
-                          child: Text(TransactionModel(
-                            id: '', value: 0, date: DateTime.now(), billingDate: DateTime.now(), 
-                            categoryId: '', type: TransactionType.income, paymentMethod: method
-                          ).paymentMethodName),
+                          child: Text(_getPaymentMethodLabel(method, _type)),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -224,15 +254,16 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                           _paymentMethod = val!;
                           if (_paymentMethod != PaymentMethod.creditCard) {
                             _billingDate = _transactionDate;
-                            _isConfirmed = true; // Dinheiro/Pix geralmente confirmado
+                            _isConfirmed = true; 
                           } else {
-                            _isConfirmed = false; // Cartão geralmente pendente
+                            _isConfirmed = false;
                           }
                         });
                       },
                     ),
                     const SizedBox(height: 24),
 
+                    // Datas
                     _buildDatePicker('Data da Transação', _transactionDate, () => _selectDate(context, false)),
                     
                     if (_paymentMethod == PaymentMethod.creditCard) ...[
@@ -242,7 +273,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     
                     const SizedBox(height: 24),
 
-                    // Toggle de Confirmação
+                    // Confirmação Dinâmica
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Row(
@@ -251,8 +282,14 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Lançamento Confirmado', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-                                Text('Já entrou/saiu da conta', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
+                                Text(
+                                  isIncome ? 'Recebimento Confirmado' : 'Lançamento Confirmado', 
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)
+                                ),
+                                Text(
+                                  isIncome ? 'O dinheiro já caiu na conta' : 'Já entrou/saiu da conta', 
+                                  style: const TextStyle(fontSize: 12, color: AppColors.textGrey)
+                                ),
                               ],
                             ),
                           ),
