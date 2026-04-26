@@ -247,22 +247,26 @@ class _LoginCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 2,
+                  padding: const EdgeInsets.symmetric(vertical: 16), // Padding em vez de altura fixa
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: carregando
                     ? const SizedBox(
-                  height: 20,
-                  width: 20,
+                  height: 24,
+                  width: 24,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 3, color: Colors.white),
                 )
-                    : const Text(
+                    : Text(
                   'Entrar',
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.inter(
+                    fontSize: 16, 
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),
