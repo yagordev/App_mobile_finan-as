@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'app_colors.dart';
 import 'login_page.dart';
 import 'providers/finance_provider.dart';
+import 'transaction_form_page.dart';
 
 class HomePage extends StatelessWidget {
   final String email;
@@ -69,9 +70,8 @@ class HomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navegar para tela de cadastro
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Em breve: Cadastro de Transação')),
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const TransactionFormPage()),
           );
         },
         backgroundColor: AppColors.primaryGreen,
