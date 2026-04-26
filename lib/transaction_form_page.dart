@@ -25,6 +25,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   PaymentMethod _paymentMethod = PaymentMethod.cash;
   DateTime _transactionDate = DateTime.now();
   DateTime _billingDate = DateTime.now();
+  bool _isConfirmed = true;
 
   @override
   void dispose() {
@@ -55,7 +56,9 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
           _billingDate = picked;
         } else {
           _transactionDate = picked;
-          _billingDate = picked;
+          if (_paymentMethod != PaymentMethod.creditCard) {
+            _billingDate = picked;
+          }
         }
       });
     }
@@ -74,11 +77,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       value: doubleValue,
       date: _transactionDate,
-      billingDate: _billingDate,
+      billingDate: _paymentMethod == PaymentMethod.creditCard ? _billingDate : _transactionDate,
       description: _descriptionController.text.trim(),
       categoryId: _selectedCategory!.id,
       type: _type,
       paymentMethod: _paymentMethod,
+      isConfirmed: _isConfirmed,
     );
 
     finance.addTransaction(transaction);
@@ -88,7 +92,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   @override
   Widget build(BuildContext context) {
     final finance = context.watch<FinanceProvider>();
-    final dateFormat = DateFormat('dd/MM/yyyy');
+    final filteredCategories = finance.getCategoriesByType(_type);
 
     return Scaffold(
       appBar: AppBar(
@@ -103,30 +107,21 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
           key: _formKey,
           child: Column(
             children: [
-              // Card Principal
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.cardShadow,
-                      blurRadius: 20,
-                      offset: Offset(0, 10),
-                    )
+                    BoxShadow(color: AppColors.cardShadow, blurRadius: 20, offset: Offset(0, 10))
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Seletor de Tipo Moderno
                     Center(
                       child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.all(4),
                         child: Row(
                           children: [
@@ -135,7 +130,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                                 label: 'Despesa',
                                 isSelected: _type == TransactionType.expense,
                                 color: AppColors.expense,
-                                onTap: () => setState(() => _type = TransactionType.expense),
+                                onTap: () {
+                                  setState(() {
+                                    _type = TransactionType.expense;
+                                    _selectedCategory = null;
+                                  });
+                                },
                               ),
                             ),
                             Expanded(
@@ -143,7 +143,12 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                                 label: 'Receita',
                                 isSelected: _type == TransactionType.income,
                                 color: AppColors.income,
-                                onTap: () => setState(() => _type = TransactionType.income),
+                                onTap: () {
+                                  setState(() {
+                                    _type = TransactionType.income;
+                                    _selectedCategory = null;
+                                  });
+                                },
                               ),
                             ),
                           ],
@@ -152,19 +157,10 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Bloco de Valor Destacado
                     Center(
                       child: Column(
                         children: [
-                          Text(
-                            'VALOR DO LANÇAMENTO',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.5,
-                              color: AppColors.textGrey.withOpacity(0.8),
-                            ),
-                          ),
+                          Text('VALOR DO LANÇAMENTO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: AppColors.textGrey.withOpacity(0.8))),
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -178,12 +174,8 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                               keyboardType: TextInputType.number,
                               inputFormatters: [CurrencyInputFormatter()],
                               textAlign: TextAlign.center,
-                              autofocus: true, // Já abre o teclado no valor
-                              style: const TextStyle(
-                                fontSize: 38,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textDark,
-                              ),
+                              autofocus: true,
+                              style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w900, color: AppColors.textDark),
                               decoration: InputDecoration(
                                 hintText: 'R\$ 0,00',
                                 hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.2)),
@@ -202,12 +194,11 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     const Divider(height: 1),
                     const SizedBox(height: 24),
 
-                    // Categoria
                     _buildLabel('Categoria'),
                     DropdownButtonFormField<CategoryModel>(
                       value: _selectedCategory,
                       decoration: _inputDecoration(Icons.category_outlined),
-                      items: finance.categories.map((cat) {
+                      items: filteredCategories.map((cat) {
                         return DropdownMenuItem(value: cat, child: Text(cat.name));
                       }).toList(),
                       onChanged: (val) => setState(() => _selectedCategory = val),
@@ -215,7 +206,6 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Método
                     _buildLabel('Forma de Pagamento'),
                     DropdownButtonFormField<PaymentMethod>(
                       value: _paymentMethod,
@@ -229,21 +219,54 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
                           ).paymentMethodName),
                         );
                       }).toList(),
-                      onChanged: (val) => setState(() => _paymentMethod = val!),
+                      onChanged: (val) {
+                        setState(() {
+                          _paymentMethod = val!;
+                          if (_paymentMethod != PaymentMethod.creditCard) {
+                            _billingDate = _transactionDate;
+                            _isConfirmed = true; // Dinheiro/Pix geralmente confirmado
+                          } else {
+                            _isConfirmed = false; // Cartão geralmente pendente
+                          }
+                        });
+                      },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                    // Datas em Grid
-                    Row(
-                      children: [
-                        Expanded(child: _buildDatePicker('Data da Compra', _transactionDate, () => _selectDate(context, false))),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildDatePicker('Faturamento', _billingDate, () => _selectDate(context, true))),
-                      ],
+                    _buildDatePicker('Data da Transação', _transactionDate, () => _selectDate(context, false)),
+                    
+                    if (_paymentMethod == PaymentMethod.creditCard) ...[
+                      const SizedBox(height: 16),
+                      _buildDatePicker('Data de Faturamento (Fatura)', _billingDate, () => _selectDate(context, true), isHighlight: true),
+                    ],
+                    
+                    const SizedBox(height: 24),
+
+                    // Toggle de Confirmação
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Lançamento Confirmado', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                                Text('Já entrou/saiu da conta', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
+                              ],
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: _isConfirmed,
+                            activeColor: AppColors.primary,
+                            onChanged: (val) => setState(() => _isConfirmed = val),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 20),
 
-                    // Descrição
+                    const SizedBox(height: 24),
+
                     _buildLabel('Descrição'),
                     TextFormField(
                       controller: _descriptionController,
@@ -255,7 +278,6 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
               ),
               const SizedBox(height: 32),
 
-              // Botão Salvar
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -279,10 +301,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
   }
 
   Widget _buildLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textGrey)),
-    );
+    return Padding(padding: const EdgeInsets.only(bottom: 8, left: 4), child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textGrey)));
   }
 
   InputDecoration _inputDecoration(IconData icon, {String? hint}) {
@@ -296,7 +315,7 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
     );
   }
 
-  Widget _buildDatePicker(String label, DateTime date, VoidCallback onTap) {
+  Widget _buildDatePicker(String label, DateTime date, VoidCallback onTap, {bool isHighlight = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -304,16 +323,19 @@ class _TransactionFormPageState extends State<TransactionFormPage> {
         InkWell(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: isHighlight ? AppColors.primary.withOpacity(0.05) : AppColors.background,
               borderRadius: BorderRadius.circular(12),
+              border: isHighlight ? Border.all(color: AppColors.primary.withOpacity(0.2)) : null,
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_month_outlined, size: 18, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(DateFormat('dd/MM/yy').format(date), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                Icon(Icons.calendar_month_outlined, size: 18, color: isHighlight ? AppColors.primary : AppColors.textGrey),
+                const SizedBox(width: 12),
+                Text(DateFormat('dd/MM/yyyy').format(date), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isHighlight ? AppColors.primary : AppColors.textDark)),
+                const Spacer(),
+                const Icon(Icons.edit_calendar_outlined, size: 16, color: AppColors.textGrey),
               ],
             ),
           ),
@@ -338,20 +360,8 @@ class _TypeButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textGrey,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
+        decoration: BoxDecoration(color: isSelected ? color : Colors.transparent, borderRadius: BorderRadius.circular(10)),
+        child: Center(child: Text(label, style: TextStyle(color: isSelected ? Colors.white : AppColors.textGrey, fontWeight: FontWeight.bold, fontSize: 14))),
       ),
     );
   }

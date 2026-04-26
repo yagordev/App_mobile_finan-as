@@ -11,6 +11,7 @@ class TransactionModel {
   final String categoryId;
   final TransactionType type;
   final PaymentMethod paymentMethod;
+  final bool isConfirmed; // Status de confirmação (fluxo de caixa)
 
   TransactionModel({
     required this.id,
@@ -21,6 +22,7 @@ class TransactionModel {
     required this.categoryId,
     required this.type,
     required this.paymentMethod,
+    this.isConfirmed = false,
   });
 
   /// Retorna o nome amigável do método de pagamento
@@ -32,5 +34,29 @@ class TransactionModel {
       case PaymentMethod.debitCard: return 'Cartão de Débito';
       case PaymentMethod.bankSlip: return 'Boleto Bancário';
     }
+  }
+
+  TransactionModel copyWith({
+    String? id,
+    double? value,
+    DateTime? date,
+    DateTime? billingDate,
+    String? description,
+    String? categoryId,
+    TransactionType? type,
+    PaymentMethod? paymentMethod,
+    bool? isConfirmed,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      value: value ?? this.value,
+      date: date ?? this.date,
+      billingDate: billingDate ?? this.billingDate,
+      description: description ?? this.description,
+      categoryId: categoryId ?? this.categoryId,
+      type: type ?? this.type,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      isConfirmed: isConfirmed ?? this.isConfirmed,
+    );
   }
 }
