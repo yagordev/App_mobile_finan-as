@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'home_page.dart';
 
-/// Tela de Login
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -17,8 +16,6 @@ class _LoginPageState extends State<LoginPage> {
   bool esconderSenha = true;
   bool carregando = false;
   final _formKey = GlobalKey<FormState>();
-
-  // FocusNode para controlar o foco da senha
   final FocusNode _senhaFocus = FocusNode();
 
   @override
@@ -29,12 +26,11 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  /// Faz login e navega para Home com transição Fade
   Future<void> _entrar() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => carregando = true);
-    await Future.delayed(const Duration(seconds: 1)); // Substitua por API real
+    await Future.delayed(const Duration(seconds: 1));
     setState(() => carregando = false);
 
     if (!mounted) return;
@@ -52,23 +48,55 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _LoginCard(
-                formKey: _formKey,
-                emailCtrl: emailCtrl,
-                senhaCtrl: senhaCtrl,
-                senhaFocus: _senhaFocus,
-                esconderSenha: esconderSenha,
-                onToggleSenha: () =>
-                    setState(() => esconderSenha = !esconderSenha),
-                carregando: carregando,
-                onEntrar: _entrar,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 40),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Bem-vindo!',
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gerencie suas finanças de forma simples.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  _LoginCard(
+                    formKey: _formKey,
+                    emailCtrl: emailCtrl,
+                    senhaCtrl: senhaCtrl,
+                    senhaFocus: _senhaFocus,
+                    esconderSenha: esconderSenha,
+                    onToggleSenha: () =>
+                        setState(() => esconderSenha = !esconderSenha),
+                    carregando: carregando,
+                    onEntrar: _entrar,
+                  ),
+                ],
               ),
             ),
           ),
@@ -78,7 +106,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-/// Card de login extraído em widget separado
 class _LoginCard extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController emailCtrl;
@@ -102,203 +129,102 @@ class _LoginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.cardBorder),
-        boxShadow: [
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: AppColors.cardShadow,
+            blurRadius: 24,
+            offset: Offset(0, 12),
           ),
         ],
       ),
       child: Form(
         key: formKey,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.lock, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
-                Text('Entrar', style: t.headlineLarge),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Acesse sua conta usando seu e-mail e senha.',
-              style: t.bodyLarge?.copyWith(color: AppColors.secondaryGreen),
-            ),
-            const SizedBox(height: 18),
-
-            // Campo E-mail — ao pressionar Enter, move foco para senha
             TextFormField(
               controller: emailCtrl,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
-              onFieldSubmitted: (_) {
-                FocusScope.of(context).requestFocus(senhaFocus);
-              },
-              decoration: InputDecoration(
-                labelText: 'E-mail',
-                prefixIcon: Icon(Icons.email, color: AppColors.secondaryGreen),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                      color: AppColors.secondaryGreen.withOpacity(0.45)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: AppColors.primaryGreen, width: 2),
-                ),
-              ),
+              onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(senhaFocus),
+              decoration: _inputDecoration('E-mail', Icons.email_outlined),
               validator: (v) {
-                final value = (v ?? '').trim();
-                if (value.isEmpty) return 'Informe seu e-mail';
-
-                // Regex completo para validar e-mail
-                final emailRegex = RegExp(
-                  r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
-                );
-                if (!emailRegex.hasMatch(value)) return 'E-mail inválido';
-
+                if ((v ?? '').isEmpty) return 'Informe seu e-mail';
                 return null;
               },
             ),
-            const SizedBox(height: 12),
-
-            // Campo Senha — ao pressionar Enter, tenta fazer login
+            const SizedBox(height: 16),
             TextFormField(
               controller: senhaCtrl,
               focusNode: senhaFocus,
               obscureText: esconderSenha,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => carregando ? null : onEntrar(),
-              decoration: InputDecoration(
-                labelText: 'Senha',
-                prefixIcon:
-                Icon(Icons.password, color: AppColors.secondaryGreen),
-                suffixIcon: IconButton(
+              decoration: _inputDecoration(
+                'Senha',
+                Icons.lock_outline,
+                suffix: IconButton(
                   onPressed: onToggleSenha,
                   icon: Icon(
-                    esconderSenha ? Icons.visibility : Icons.visibility_off,
-                    color: AppColors.secondaryGreen,
+                    esconderSenha ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    color: AppColors.textGrey,
+                    size: 20,
                   ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                      color: AppColors.secondaryGreen.withOpacity(0.45)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: AppColors.primaryGreen, width: 2),
                 ),
               ),
               validator: (v) {
-                final value = (v ?? '').trim();
-                if (value.isEmpty) return 'Informe sua senha';
-                if (value.length < 4) return 'Senha muito curta';
+                if ((v ?? '').isEmpty) return 'Informe sua senha';
                 return null;
               },
             ),
-            const SizedBox(height: 10),
-
-            // Link "Esqueci a senha"
+            const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Recuperação de senha (simulação)')),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.secondaryGreen,
-                ),
-                child: const Text('Esqueci minha senha'),
+                onPressed: () {},
+                style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                child: const Text('Esqueci minha senha', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               ),
             ),
-            const SizedBox(height: 6),
-
-            // Botão Entrar
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: carregando ? null : onEntrar,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryGreen,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  elevation: 2,
-                  padding: const EdgeInsets.symmetric(vertical: 16), // Padding em vez de altura fixa
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: carregando
-                    ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 3, color: Colors.white),
-                )
-                    : Text(
-                  'Entrar',
-                  style: GoogleFonts.inter(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
+                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                    : const Text('Entrar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-            ),
-            const SizedBox(height: 12),
-
-            // Rodapé: criar conta
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Não tem conta? ',
-                  style: t.bodyLarge?.copyWith(color: AppColors.textDark),
-                ),
-                TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Cadastro (simulação)')),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.secondaryGreen,
-                  ),
-                  child: const Text(
-                    'Criar conta',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon, {Widget? suffix}) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: AppColors.background,
+      labelStyle: const TextStyle(color: AppColors.textGrey, fontSize: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.primary, width: 1.5)),
     );
   }
 }

@@ -27,13 +27,13 @@ class MyApp extends StatelessWidget {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.cream,
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primaryGreen,
+        seedColor: AppColors.primary,
         brightness: Brightness.light,
-        primary: AppColors.primaryGreen,
-        secondary: AppColors.secondaryGreen,
-        surface: Colors.white,
+        primary: AppColors.primary,
+        secondary: AppColors.secondary,
+        surface: AppColors.surface,
       ),
       textTheme: GoogleFonts.interTextTheme(
         ThemeData.light().textTheme,
