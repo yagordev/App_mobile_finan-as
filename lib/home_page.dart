@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'app_colors.dart';
 import 'login_page.dart';
+import 'providers/finance_provider.dart';
 
 class HomePage extends StatelessWidget {
   final String email;
@@ -10,6 +13,15 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final finance = context.watch<FinanceProvider>();
+    final now = DateTime.now();
+    final balance = finance.getTotalBalance(now.month, now.year);
+    final incomes = finance.getTotalIncomes(now.month, now.year);
+    final expenses = finance.getTotalExpenses(now.month, now.year);
+    
+    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final monthName = DateFormat('MMMM', 'pt_BR').format(now);
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
@@ -28,7 +40,7 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              'Dashboard',
+              'Financeiro',
               style: GoogleFonts.darkerGrotesque(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -55,13 +67,23 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Navegar para tela de cadastro
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Em breve: Cadastro de Transação')),
+          );
+        },
+        backgroundColor: AppColors.primaryGreen,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Card de boas-vindas
+              // Card de Saldo Total
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
@@ -79,57 +101,22 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(
-                            Icons.waving_hand,
-                            color: Colors.white,
-                            size: 26,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Bem-vindo de volta!',
-                                style: GoogleFonts.darkerGrotesque(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                email,
-                                style: GoogleFonts.darkerGrotesque(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
                     Text(
-                      'Que bom ter você aqui novamente. '
-                          'Explore o dashboard e aproveite os recursos disponíveis.',
+                      'Saldo Total (${monthName.toUpperCase()})',
                       style: GoogleFonts.darkerGrotesque(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      currencyFormat.format(balance),
+                      style: GoogleFonts.darkerGrotesque(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.1,
                       ),
                     ),
                   ],
@@ -139,7 +126,7 @@ class HomePage extends StatelessWidget {
 
               // Título da seção
               Text(
-                'Visão geral',
+                'Resumo do Mês',
                 style: GoogleFonts.darkerGrotesque(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -148,45 +135,34 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 14),
 
-              // Cards de métricas
+              // Cards de Receitas e Despesas
               Row(
                 children: [
                   Expanded(
                     child: _MetricCard(
-                      icon: Icons.bar_chart,
-                      label: 'Relatórios',
-                      value: '12',
+                      icon: Icons.arrow_upward,
+                      iconColor: Colors.green,
+                      label: 'Receitas',
+                      value: currencyFormat.format(incomes),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _MetricCard(
-                      icon: Icons.task_alt,
-                      label: 'Tarefas',
-                      value: '5',
+                      icon: Icons.arrow_downward,
+                      iconColor: Colors.red,
+                      label: 'Despesas',
+                      value: currencyFormat.format(expenses),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _MetricCard(
-                      icon: Icons.notifications_none,
-                      label: 'Notificações',
-                      value: '3',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _MetricCard(
-                      icon: Icons.people_outline,
-                      label: 'Usuários',
-                      value: '8',
-                    ),
-                  ),
-                ],
+              _MetricCard(
+                icon: Icons.receipt_long,
+                iconColor: AppColors.primaryGreen,
+                label: 'Transações no período',
+                value: finance.getTransactionsByMonth(now.month, now.year).length.toString(),
               ),
             ],
           ),
@@ -199,11 +175,13 @@ class HomePage extends StatelessWidget {
 /// Card de métrica reutilizável
 class _MetricCard extends StatelessWidget {
   final IconData icon;
+  final Color iconColor;
   final String label;
   final String value;
 
   const _MetricCard({
     required this.icon,
+    required this.iconColor,
     required this.label,
     required this.value,
   });
@@ -230,35 +208,40 @@ class _MetricCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.1),
+              color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: AppColors.primaryGreen, size: 22),
+            child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: GoogleFonts.darkerGrotesque(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.darkerGrotesque(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                    height: 1.1,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                label,
-                style: GoogleFonts.darkerGrotesque(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.secondaryGreen,
+                Text(
+                  label,
+                  style: GoogleFonts.darkerGrotesque(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.secondaryGreen,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 }
+
