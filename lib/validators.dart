@@ -6,8 +6,8 @@ class Validators {
       return 'O valor é obrigatório';
     }
     
-    // Remove formatação de moeda para validar o número puramente
-    final cleanValue = value.replaceAll(RegExp(r'[^0-9,]'), '').replaceAll(',', '.');
+    // Remove formatação de moeda mas mantém o sinal de menos para validação
+    final cleanValue = value.replaceAll(RegExp(r'[^0-9\-,]'), '').replaceAll(',', '.');
     final doubleValue = double.tryParse(cleanValue);
 
     if (doubleValue == null) {
