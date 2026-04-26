@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
         secondary: AppColors.secondaryGreen,
         surface: Colors.white,
       ),
-      textTheme: GoogleFonts.darkerGrotesqueTextTheme(
+      textTheme: GoogleFonts.interTextTheme(
         ThemeData.light().textTheme,
       ),
     );
@@ -44,21 +44,19 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: base.copyWith(
         textTheme: base.textTheme.copyWith(
-          headlineLarge: GoogleFonts.darkerGrotesque(
-            fontSize: 42,
+          headlineLarge: GoogleFonts.inter(
+            fontSize: 32,
             fontWeight: FontWeight.w800,
-            height: 1.05,
             color: AppColors.textDark,
           ),
-          titleLarge: GoogleFonts.darkerGrotesque(
+          titleLarge: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: AppColors.textDark,
           ),
-          bodyLarge: GoogleFonts.darkerGrotesque(
+          bodyLarge: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            height: 1.35,
             color: AppColors.textDark,
           ),
         ),

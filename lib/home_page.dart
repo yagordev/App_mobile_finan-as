@@ -42,8 +42,8 @@ class HomePage extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               'Financeiro',
-              style: GoogleFonts.darkerGrotesque(
-                fontSize: 20,
+              style: GoogleFonts.inter(
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),
@@ -92,8 +92,8 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryGreen.withOpacity(0.35),
-                      blurRadius: 18,
+                      color: AppColors.primaryGreen.withOpacity(0.25),
+                      blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
                   ],
@@ -102,21 +102,21 @@ class HomePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Saldo Total (${monthName.toUpperCase()})',
-                      style: GoogleFonts.darkerGrotesque(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.8),
+                      'SALDO TOTAL (${monthName.toUpperCase()})',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
                       currencyFormat.format(balance),
-                      style: GoogleFonts.darkerGrotesque(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.inter(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        height: 1.1,
                       ),
                     ),
                   ],
@@ -127,9 +127,9 @@ class HomePage extends StatelessWidget {
               // Título da seção
               Text(
                 'Resumo do Mês',
-                style: GoogleFonts.darkerGrotesque(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textDark,
                 ),
               ),
@@ -189,15 +189,15 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
@@ -205,34 +205,33 @@ class _MetricCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.darkerGrotesque(
-                    fontSize: 20,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
-                    height: 1.1,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   label,
-                  style: GoogleFonts.darkerGrotesque(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.secondaryGreen,
                   ),
                 ),
